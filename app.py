@@ -39,13 +39,22 @@ def list_photos():
     return jsonify({"files": files})
 
 # ── 写真アップロード ────────────────────────────────────
+MAX_IMAGES = 10
+
 @app.route("/api/upload", methods=["POST"])
 def upload():
     if "files" not in request.files:
         return jsonify({"error": "ファイルがありません"}), 400
 
+    current_count = len([
+        f for f in UPLOAD_DIR.iterdir()
+        if f.suffix.lower() in IMAGE_EXTENSIONS
+    ])
+
     uploaded = []
     for f in request.files.getlist("files"):
+        if current_count + len(uploaded) >= MAX_IMAGES:
+            break
         if Path(f.filename).suffix.lower() not in IMAGE_EXTENSIONS:
             continue
         filename = secure_filename(f.filename)
@@ -81,6 +90,11 @@ def run_pipeline():
         ]
         if not files:
             data = json.dumps({"type": "error", "message": "写真がアップロードされていません"})
+            yield f"data: {data}\n\n"
+            return
+
+        if len(files) > MAX_IMAGES:
+            data = json.dumps({"type": "error", "message": f"送信できる画像は1度に{MAX_IMAGES}枚までです。現在{len(files)}枚あります。不要な画像を削除してください。"})
             yield f"data: {data}\n\n"
             return
 
