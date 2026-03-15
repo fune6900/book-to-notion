@@ -1,0 +1,946 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BOOK TO NOTION</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Noto+Sans+JP:wght@400;700;900&display=swap');
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:         #02020f;
+      --bg2:        #07071a;
+      --bg3:        #0d0d28;
+      --pink:       #ff2d78;
+      --pink-dim:   #c01f5a;
+      --cyan:       #00d4ff;
+      --cyan-dim:   #0099bb;
+      --purple:     #9b4dff;
+      --text:       #dde0ff;
+      --muted:      #5a5a8a;
+      --glow-pink:  0 0 12px rgba(255,45,120,0.7), 0 0 30px rgba(255,45,120,0.3);
+      --glow-cyan:  0 0 12px rgba(0,212,255,0.7), 0 0 30px rgba(0,212,255,0.3);
+    }
+
+    /* ── 背景：ネオン環境光 ──────────────────────────── */
+    body {
+      font-family: 'Noto Sans JP', -apple-system, sans-serif;
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 20px 60px;
+      position: relative;
+      overflow-x: hidden;
+
+      background-color: #04041a;
+
+      background-image:
+        radial-gradient(ellipse 60% 50% at 0% 0%,   rgba(255,45,120,0.18) 0%, transparent 70%),
+        radial-gradient(ellipse 55% 45% at 100% 100%, rgba(0,212,255,0.15) 0%, transparent 65%),
+        radial-gradient(ellipse 70% 60% at 50% 40%,  rgba(100,40,180,0.12) 0%, transparent 70%),
+        radial-gradient(ellipse 40% 35% at 95% 5%,   rgba(255,45,120,0.10) 0%, transparent 60%),
+        linear-gradient(rgba(0,212,255,0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,212,255,0.05) 1px, transparent 1px);
+
+      background-size:
+        100% 100%,
+        100% 100%,
+        100% 100%,
+        100% 100%,
+        44px 44px,
+        44px 44px;
+
+      animation: bg-drift 20s ease-in-out infinite alternate;
+    }
+
+    /* ── スキャンライン ＋ ビネット ─────────────────── */
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 90% 85% at 50% 50%, transparent 55%, rgba(2,1,20,0.7) 100%),
+        repeating-linear-gradient(
+          0deg,
+          transparent,
+          transparent 2px,
+          rgba(0,0,0,0.06) 2px,
+          rgba(0,0,0,0.06) 4px
+        );
+      pointer-events: none;
+      z-index: 100;
+    }
+
+    /* ── 床面反射 ────────────────────────────────── */
+    body::after {
+      content: "";
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      height: 180px;
+      background:
+        linear-gradient(to top,
+          rgba(255,45,120,0.06) 0%,
+          rgba(0,212,255,0.04) 40%,
+          transparent 100%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── パーティクルキャンバス ───────────────────── */
+    #particle-canvas {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 1;
+      opacity: 0.6;
+    }
+
+    /* ── ヘッダー ────────────────────────────────────── */
+    header {
+      text-align: center;
+      margin-bottom: 40px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .logo {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 2.6rem;
+      font-weight: 900;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      line-height: 1;
+      position: relative;
+    }
+
+    .logo .word-book {
+      color: var(--cyan);
+      text-shadow: var(--glow-cyan);
+      display: inline-block;
+      animation: neon-flicker-cyan 8s ease-in-out infinite;
+    }
+    .logo .word-to {
+      color: var(--muted);
+      font-size: 1.2rem;
+      margin: 0 8px;
+      display: inline-block;
+      animation: arrow-bounce 2s ease-in-out infinite;
+    }
+    .logo .word-notion {
+      color: var(--pink);
+      text-shadow: var(--glow-pink);
+      display: inline-block;
+      animation: neon-flicker-pink 7s ease-in-out infinite 2s;
+    }
+
+    .logo:hover .word-book,
+    .logo:hover .word-notion {
+      animation: glitch-text 0.3s steps(2) infinite;
+    }
+
+    .subtitle {
+      font-size: 0.78rem;
+      color: var(--muted);
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      margin-top: 10px;
+      animation: fade-in-down 1s ease-out both 0.3s;
+    }
+    .subtitle span {
+      color: var(--cyan);
+      opacity: 0.6;
+    }
+
+    /* ── コンテナ ────────────────────────────────────── */
+    .container {
+      width: 100%;
+      max-width: 860px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+      position: relative;
+      z-index: 2;
+    }
+
+    /* ── パネル共通 ──────────────────────────────────── */
+    .panel {
+      background: rgba(7,7,28,0.85);
+      border: 1px solid rgba(0,212,255,0.2);
+      border-radius: 4px;
+      position: relative;
+      backdrop-filter: blur(2px);
+      box-shadow:
+        inset 0 0 40px rgba(0,212,255,0.03),
+        0 0 20px rgba(0,212,255,0.05);
+      animation: panel-appear 0.6s ease-out both;
+    }
+    .panel:nth-child(2) { animation-delay: 0.1s; }
+
+    .panel::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: 4px;
+      background: linear-gradient(135deg,
+        rgba(0,212,255,0.05) 0%,
+        rgba(100,40,180,0.03) 40%,
+        transparent 70%);
+      pointer-events: none;
+    }
+
+    /* パネルスキャンライン */
+    .panel::after {
+      content: "";
+      position: absolute;
+      left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg,
+        transparent,
+        rgba(0,212,255,0.3) 40%,
+        rgba(0,212,255,0.6) 50%,
+        rgba(0,212,255,0.3) 60%,
+        transparent);
+      animation: panel-scan 6s linear infinite;
+      pointer-events: none;
+      z-index: 10;
+      opacity: 0.5;
+      border-radius: 4px;
+    }
+
+    /* パネルの角デコ */
+    .panel-corner {
+      position: absolute;
+      width: 10px; height: 10px;
+      transition: border-color 0.3s;
+    }
+    .panel-corner.tl { top: -1px;  left: -1px;  border-top: 2px solid var(--cyan); border-left: 2px solid var(--cyan); animation: corner-pulse 3s ease-in-out infinite; }
+    .panel-corner.tr { top: -1px;  right: -1px; border-top: 2px solid var(--cyan); border-right: 2px solid var(--cyan); animation: corner-pulse 3s ease-in-out infinite 0.75s; }
+    .panel-corner.bl { bottom: -1px; left: -1px;  border-bottom: 2px solid var(--cyan); border-left: 2px solid var(--cyan); animation: corner-pulse 3s ease-in-out infinite 1.5s; }
+    .panel-corner.br { bottom: -1px; right: -1px; border-bottom: 2px solid var(--cyan); border-right: 2px solid var(--cyan); animation: corner-pulse 3s ease-in-out infinite 2.25s; }
+
+    .panel-label {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.65rem;
+      letter-spacing: 0.2em;
+      color: var(--cyan);
+      opacity: 0.6;
+      position: absolute;
+      top: -10px;
+      left: 14px;
+      background: var(--bg);
+      padding: 0 6px;
+    }
+    .panel-label::after {
+      content: "_";
+      animation: blink-cursor 1.1s step-end infinite;
+    }
+
+    /* ── ドロップゾーン ──────────────────────────────── */
+    #drop-zone {
+      padding: 48px 24px;
+      text-align: center;
+      cursor: pointer;
+      transition: background 0.25s, border-color 0.25s, box-shadow 0.25s;
+      background: radial-gradient(ellipse 80% 70% at 50% 100%,
+        rgba(0,212,255,0.04) 0%, transparent 70%);
+    }
+    #drop-zone.drag-over {
+      background: radial-gradient(ellipse 80% 70% at 50% 100%,
+        rgba(0,212,255,0.10) 0%, transparent 70%);
+      border-color: var(--cyan);
+      box-shadow:
+        inset 0 0 40px rgba(0,212,255,0.07),
+        0 0 20px rgba(0,212,255,0.12);
+    }
+    #drop-zone.drag-over .drop-icon {
+      animation: icon-shake 0.3s ease-in-out infinite alternate;
+    }
+
+    .drop-icon {
+      font-size: 2.6rem;
+      margin-bottom: 14px;
+      filter: drop-shadow(0 0 8px rgba(0,212,255,0.5));
+      display: inline-block;
+      animation: icon-float 3s ease-in-out infinite;
+    }
+    #drop-zone .drop-title {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 1rem;
+      color: var(--cyan);
+      letter-spacing: 0.1em;
+      margin-bottom: 6px;
+    }
+    #drop-zone .drop-sub {
+      font-size: 0.78rem;
+      color: var(--muted);
+      letter-spacing: 0.05em;
+    }
+    #file-input { display: none; }
+
+    /* ── グリッドヘッダー ────────────────────────────── */
+    .grid-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      animation: fade-in-down 0.5s ease-out both 0.4s;
+    }
+    .section-label {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.72rem;
+      letter-spacing: 0.25em;
+      color: var(--muted);
+      text-transform: uppercase;
+    }
+    .count-badge {
+      font-family: 'Share Tech Mono', monospace;
+      background: transparent;
+      border: 1px solid var(--pink);
+      color: var(--pink);
+      font-size: 0.7rem;
+      letter-spacing: 0.1em;
+      border-radius: 2px;
+      padding: 2px 10px;
+      text-shadow: var(--glow-pink);
+      transition: transform 0.15s;
+    }
+    .count-badge.pop {
+      animation: badge-pop 0.3s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+    }
+
+    /* ── サムネイルグリッド ──────────────────────────── */
+    #thumb-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+      gap: 8px;
+    }
+
+    .thumb-item {
+      position: relative;
+      border-radius: 3px;
+      overflow: hidden;
+      aspect-ratio: 3/4;
+      background: var(--bg3);
+      border: 1px solid rgba(0,212,255,0.1);
+      transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
+      animation: thumb-slide-up 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+    .thumb-item:hover {
+      border-color: var(--cyan);
+      box-shadow: 0 0 12px rgba(0,212,255,0.25), 0 4px 20px rgba(0,0,0,0.4);
+      transform: translateY(-3px) scale(1.03);
+    }
+    .thumb-item img {
+      width: 100%; height: 100%;
+      object-fit: cover;
+      display: block;
+      opacity: 0.85;
+      transition: opacity 0.2s;
+    }
+    .thumb-item:hover img { opacity: 1; }
+    .thumb-item .del-btn {
+      position: absolute;
+      top: 4px; right: 4px;
+      background: rgba(255,45,120,0.85);
+      border: none;
+      border-radius: 2px;
+      width: 20px; height: 20px;
+      color: #fff;
+      font-size: 0.65rem;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0;
+      transition: opacity 0.15s;
+      font-family: 'Share Tech Mono', monospace;
+    }
+    .thumb-item:hover .del-btn { opacity: 1; }
+    .thumb-item .fname {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      background: rgba(2,2,15,0.8);
+      font-size: 0.55rem;
+      color: var(--cyan);
+      padding: 3px 5px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      font-family: 'Share Tech Mono', monospace;
+      letter-spacing: 0.05em;
+    }
+
+    /* ── 空状態 ──────────────────────────────────────── */
+    #empty-state {
+      text-align: center;
+      padding: 28px 0;
+      color: var(--muted);
+      font-size: 0.8rem;
+      font-family: 'Share Tech Mono', monospace;
+      letter-spacing: 0.15em;
+      animation: fade-blink 4s ease-in-out infinite;
+    }
+    #empty-state::before { content: "// "; }
+
+    /* ── アクションバー ──────────────────────────────── */
+    .action-bar {
+      display: flex;
+      gap: 12px;
+      animation: fade-in-down 0.5s ease-out both 0.5s;
+    }
+
+    button {
+      border: none;
+      border-radius: 3px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      cursor: pointer;
+      padding: 13px 22px;
+      transition: all 0.15s;
+      font-family: 'Share Tech Mono', monospace;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+    button:active { transform: scale(0.97); }
+    button:disabled { opacity: 0.3; cursor: not-allowed; }
+
+    #run-btn {
+      flex: 1;
+      background: var(--pink);
+      color: #fff;
+      box-shadow: var(--glow-pink);
+      position: relative;
+      overflow: hidden;
+    }
+    #run-btn::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.12) 50%, transparent 100%);
+      transform: translateX(-100%);
+      transition: transform 0.4s;
+    }
+    #run-btn:hover:not(:disabled)::after { transform: translateX(100%); }
+    #run-btn:hover:not(:disabled) {
+      background: var(--pink-dim);
+      box-shadow: 0 0 20px rgba(255,45,120,0.9), 0 0 50px rgba(255,45,120,0.4);
+      transform: translateY(-1px);
+    }
+    #run-btn.running {
+      animation: run-btn-pulse 1.4s ease-in-out infinite;
+    }
+    #run-btn.running::before {
+      content: "";
+      position: absolute;
+      top: 0; left: -100%; right: 0; bottom: 0;
+      background: linear-gradient(90deg,
+        transparent,
+        rgba(255,255,255,0.15) 50%,
+        transparent);
+      animation: btn-scan 1.4s linear infinite;
+    }
+
+    #clear-btn {
+      background: transparent;
+      border: 1px solid var(--muted);
+      color: var(--muted);
+    }
+    #clear-btn:hover:not(:disabled) {
+      border-color: var(--pink);
+      color: var(--pink);
+      box-shadow: 0 0 8px rgba(255,45,120,0.2);
+    }
+
+    /* ── ログ出力 ────────────────────────────────────── */
+    #log-box {
+      background: #020209;
+      border: 1px solid rgba(0,212,255,0.12);
+      border-radius: 3px;
+      padding: 18px 20px;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.78rem;
+      line-height: 1.9;
+      color: rgba(0,212,255,0.7);
+      min-height: 120px;
+      max-height: 320px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      display: none;
+    }
+    #log-box::-webkit-scrollbar { width: 4px; }
+    #log-box::-webkit-scrollbar-track { background: transparent; }
+    #log-box::-webkit-scrollbar-thumb { background: var(--cyan-dim); border-radius: 2px; }
+
+    #log-box .log-line {
+      animation: log-slide-in 0.25s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+    #log-box .log-error {
+      color: var(--pink);
+      text-shadow: var(--glow-pink);
+      animation: log-slide-in 0.25s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+    #log-box .log-done {
+      color: var(--cyan);
+      text-shadow: var(--glow-cyan);
+      font-weight: bold;
+      letter-spacing: 0.05em;
+      animation: log-slide-in 0.25s cubic-bezier(0.16, 1, 0.3, 1) both, done-flash 0.5s ease-out 0.25s both;
+    }
+
+    /* ── フッター ────────────────────────────────────── */
+    footer {
+      margin-top: 8px;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.65rem;
+      color: var(--muted);
+      letter-spacing: 0.2em;
+      text-align: center;
+      opacity: 0.5;
+      animation: footer-glitch 12s ease-in-out infinite;
+    }
+
+    /* ══════════════════════════════════════════════════
+       KEYFRAME ANIMATIONS
+    ══════════════════════════════════════════════════ */
+
+    /* 背景ドリフト */
+    @keyframes bg-drift {
+      0%   { background-position: 0% 0%, 100% 100%, 50% 40%, 95% 5%, 0 0, 0 0; }
+      33%  { background-position: 5% 5%, 95% 95%, 55% 45%, 90% 10%, 4px 4px, 4px 4px; }
+      66%  { background-position: -3% 3%, 103% 97%, 47% 37%, 98% 2%, 8px 0, 0 8px; }
+      100% { background-position: 2% -2%, 98% 102%, 52% 42%, 93% 7%, 2px 6px, 6px 2px; }
+    }
+
+    /* リアルなネオンフリッカー（シアン） */
+    @keyframes neon-flicker-cyan {
+      0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% {
+        opacity: 1;
+        text-shadow: var(--glow-cyan);
+      }
+      20%, 24%, 55% {
+        opacity: 0.4;
+        text-shadow: none;
+      }
+    }
+
+    /* リアルなネオンフリッカー（ピンク） */
+    @keyframes neon-flicker-pink {
+      0%, 18%, 20%, 22%, 24%, 65%, 67%, 100% {
+        opacity: 1;
+        text-shadow: var(--glow-pink);
+      }
+      19%, 23%, 66% {
+        opacity: 0.35;
+        text-shadow: none;
+      }
+    }
+
+    /* 矢印バウンス */
+    @keyframes arrow-bounce {
+      0%, 100% { transform: translateX(0); opacity: 0.6; }
+      50%       { transform: translateX(4px); opacity: 1; }
+    }
+
+    /* グリッチテキスト */
+    @keyframes glitch-text {
+      0%   { transform: translate(0); }
+      20%  { transform: translate(-2px, 1px); clip-path: polygon(0 0, 100% 0, 100% 45%, 0 45%); }
+      40%  { transform: translate(2px, -1px); clip-path: polygon(0 55%, 100% 55%, 100% 100%, 0 100%); }
+      60%  { transform: translate(-1px, 2px); }
+      80%  { transform: translate(1px, -2px); }
+      100% { transform: translate(0); }
+    }
+
+    /* パーティクルフロート */
+    @keyframes icon-float {
+      0%, 100% { transform: translateY(0) rotate(0deg); }
+      33%       { transform: translateY(-6px) rotate(-3deg); }
+      66%       { transform: translateY(-3px) rotate(2deg); }
+    }
+
+    /* ドラッグ中のシェイク */
+    @keyframes icon-shake {
+      0%   { transform: rotate(-5deg) scale(1.1); }
+      100% { transform: rotate(5deg) scale(1.15); }
+    }
+
+    /* パネル出現 */
+    @keyframes panel-appear {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* パネルスキャン */
+    @keyframes panel-scan {
+      0%   { top: -2px; opacity: 0; }
+      5%   { opacity: 0.5; }
+      95%  { opacity: 0.5; }
+      100% { top: calc(100% + 2px); opacity: 0; }
+    }
+
+    /* コーナーパルス */
+    @keyframes corner-pulse {
+      0%, 100% { border-color: var(--cyan); filter: drop-shadow(0 0 3px rgba(0,212,255,0.8)); }
+      50%       { border-color: var(--pink); filter: drop-shadow(0 0 5px rgba(255,45,120,0.8)); }
+    }
+
+    /* カーソル点滅 */
+    @keyframes blink-cursor {
+      0%, 49% { opacity: 1; }
+      50%, 100% { opacity: 0; }
+    }
+
+    /* バッジポップ */
+    @keyframes badge-pop {
+      0%   { transform: scale(1); }
+      40%  { transform: scale(1.3); }
+      70%  { transform: scale(0.95); }
+      100% { transform: scale(1); }
+    }
+
+    /* サムネイルスライドアップ */
+    @keyframes thumb-slide-up {
+      from { opacity: 0; transform: translateY(20px) scale(0.95); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    /* 空状態のフェードブリンク */
+    @keyframes fade-blink {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.4; }
+    }
+
+    /* ログ行スライドイン */
+    @keyframes log-slide-in {
+      from { opacity: 0; transform: translateX(-12px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+
+    /* 完了フラッシュ */
+    @keyframes done-flash {
+      0%   { background: rgba(0,212,255,0.15); border-radius: 2px; }
+      100% { background: transparent; }
+    }
+
+    /* ランボタンパルス */
+    @keyframes run-btn-pulse {
+      0%, 100% { box-shadow: var(--glow-pink); }
+      50%       { box-shadow: 0 0 25px rgba(255,45,120,1), 0 0 60px rgba(255,45,120,0.5); }
+    }
+
+    /* ランボタンスキャン */
+    @keyframes btn-scan {
+      0%   { left: -100%; }
+      100% { left: 200%; }
+    }
+
+    /* フェードインダウン */
+    @keyframes fade-in-down {
+      from { opacity: 0; transform: translateY(-10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* フッターグリッチ */
+    @keyframes footer-glitch {
+      0%, 96%, 100% { opacity: 0.5; transform: translate(0); letter-spacing: 0.2em; }
+      97%  { opacity: 0.8; transform: translate(-2px, 0); letter-spacing: 0.25em; color: var(--cyan); }
+      98%  { opacity: 0.3; transform: translate(2px, 0);  letter-spacing: 0.18em; color: var(--pink); }
+      99%  { opacity: 0.7; transform: translate(0, 1px);  letter-spacing: 0.22em; color: var(--text); }
+    }
+  </style>
+</head>
+<body>
+
+  <canvas id="particle-canvas"></canvas>
+
+  <header>
+    <div class="logo">
+      <span class="word-book">BOOK</span>
+      <span class="word-to">▶</span>
+      <span class="word-notion">NOTION</span>
+    </div>
+    <p class="subtitle">技術書の写真を <span>//</span> Notion に自動保存</p>
+  </header>
+
+  <div class="container">
+
+    <!-- ドロップゾーン -->
+    <div class="panel" style="margin-top:8px;">
+      <div class="panel-corner tl"></div>
+      <div class="panel-corner tr"></div>
+      <div class="panel-corner bl"></div>
+      <div class="panel-corner br"></div>
+      <span class="panel-label">UPLOAD</span>
+      <div id="drop-zone">
+        <div class="drop-icon">📷</div>
+        <p class="drop-title">DROP FILES HERE</p>
+        <p class="drop-sub">クリックして選択 &nbsp;|&nbsp; JPG / PNG / HEIC</p>
+        <input type="file" id="file-input" multiple accept=".jpg,.jpeg,.png,.webp,.heic" />
+      </div>
+    </div>
+
+    <!-- サムネイルヘッダー -->
+    <div class="grid-header">
+      <span class="section-label">// FILES LOADED</span>
+      <span class="count-badge" id="count">00 FILES</span>
+    </div>
+
+    <div id="empty-state">NO FILES UPLOADED</div>
+    <div id="thumb-grid"></div>
+
+    <!-- アクションバー -->
+    <div class="action-bar">
+      <button id="clear-btn" disabled>[ CLEAR ]</button>
+      <button id="run-btn" disabled>▶ EXECUTE → NOTION</button>
+    </div>
+
+    <!-- ログ -->
+    <div class="panel" id="log-panel" style="display:none;">
+      <div class="panel-corner tl"></div>
+      <div class="panel-corner tr"></div>
+      <div class="panel-corner bl"></div>
+      <div class="panel-corner br"></div>
+      <span class="panel-label">SYSTEM LOG</span>
+      <div id="log-box"></div>
+    </div>
+
+  </div>
+
+  <footer>BOOK_TO_NOTION &nbsp;·&nbsp; DOCKER &nbsp;·&nbsp; v2.0</footer>
+
+<script>
+  /* ─── パーティクルシステム ──────────────────────── */
+  (function() {
+    const canvas = document.getElementById("particle-canvas");
+    const ctx    = canvas.getContext("2d");
+    let W, H;
+    const particles = [];
+    const PARTICLE_COUNT = 40;
+
+    function resize() {
+      W = canvas.width  = window.innerWidth;
+      H = canvas.height = window.innerHeight;
+    }
+    window.addEventListener("resize", resize);
+    resize();
+
+    const colors = [
+      "rgba(0,212,255,",
+      "rgba(255,45,120,",
+      "rgba(155,77,255,"
+    ];
+
+    function spawnParticle() {
+      return {
+        x:     Math.random() * W,
+        y:     H + 10,
+        vy:    -(0.3 + Math.random() * 0.7),
+        vx:    (Math.random() - 0.5) * 0.3,
+        size:  0.5 + Math.random() * 1.5,
+        alpha: 0.3 + Math.random() * 0.5,
+        color: colors[Math.floor(Math.random() * colors.length)],
+        life:  0,
+        maxLife: 200 + Math.random() * 300,
+        twinkle: Math.random() * Math.PI * 2,
+      };
+    }
+
+    for (let i = 0; i < PARTICLE_COUNT; i++) {
+      const p = spawnParticle();
+      p.y = Math.random() * H;
+      p.life = Math.random() * p.maxLife;
+      particles.push(p);
+    }
+
+    function tick() {
+      ctx.clearRect(0, 0, W, H);
+
+      for (let i = 0; i < particles.length; i++) {
+        const p = particles[i];
+        p.x += p.vx;
+        p.y += p.vy;
+        p.life++;
+        p.twinkle += 0.05;
+
+        const progress = p.life / p.maxLife;
+        const fade = progress < 0.1
+          ? progress / 0.1
+          : progress > 0.8
+            ? 1 - (progress - 0.8) / 0.2
+            : 1;
+
+        const twink = 0.7 + 0.3 * Math.sin(p.twinkle);
+        const alpha = p.alpha * fade * twink;
+
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        ctx.fillStyle = p.color + alpha + ")";
+        ctx.fill();
+
+        /* 小さな軌跡 */
+        ctx.beginPath();
+        ctx.moveTo(p.x, p.y);
+        ctx.lineTo(p.x - p.vx * 6, p.y - p.vy * 6);
+        ctx.strokeStyle = p.color + (alpha * 0.4) + ")";
+        ctx.lineWidth = p.size * 0.6;
+        ctx.stroke();
+
+        if (p.life >= p.maxLife || p.y < -10) {
+          particles[i] = spawnParticle();
+        }
+      }
+
+      requestAnimationFrame(tick);
+    }
+    tick();
+  })();
+
+  /* ─── UI ────────────────────────────────────────── */
+  const dropZone   = document.getElementById("drop-zone");
+  const fileInput  = document.getElementById("file-input");
+  const thumbGrid  = document.getElementById("thumb-grid");
+  const emptyState = document.getElementById("empty-state");
+  const countBadge = document.getElementById("count");
+  const runBtn     = document.getElementById("run-btn");
+  const clearBtn   = document.getElementById("clear-btn");
+  const logBox     = document.getElementById("log-box");
+  const logPanel   = document.getElementById("log-panel");
+
+  async function refreshPhotos() {
+    const res  = await fetch("/api/photos");
+    const data = await res.json();
+    renderThumbs(data.files);
+  }
+
+  function renderThumbs(files) {
+    thumbGrid.innerHTML = "";
+    const has = files.length > 0;
+    emptyState.style.display = has ? "none" : "block";
+    runBtn.disabled   = !has;
+    clearBtn.disabled = !has;
+
+    const n = String(files.length).padStart(2, "0");
+    const newText = `${n} FILES`;
+    if (countBadge.textContent !== newText) {
+      countBadge.textContent = newText;
+      /* バッジポップアニメーション */
+      countBadge.classList.remove("pop");
+      void countBadge.offsetWidth;
+      countBadge.classList.add("pop");
+    }
+
+    files.forEach((name, idx) => {
+      const item = document.createElement("div");
+      item.className = "thumb-item";
+      item.style.animationDelay = `${idx * 40}ms`;
+
+      const img = document.createElement("img");
+      img.src = `/api/photos/${encodeURIComponent(name)}/thumb`;
+      img.loading = "lazy";
+
+      const del = document.createElement("button");
+      del.className = "del-btn";
+      del.textContent = "✕";
+      del.onclick = async (e) => {
+        e.stopPropagation();
+        /* 削除アニメーション */
+        item.style.transition = "opacity 0.2s, transform 0.2s";
+        item.style.opacity = "0";
+        item.style.transform = "scale(0.8)";
+        await new Promise(r => setTimeout(r, 200));
+        await fetch(`/api/photos/${encodeURIComponent(name)}`, { method: "DELETE" });
+        refreshPhotos();
+      };
+
+      const fname = document.createElement("div");
+      fname.className = "fname";
+      fname.textContent = name;
+
+      item.append(img, del, fname);
+      thumbGrid.appendChild(item);
+    });
+  }
+
+  async function uploadFiles(files) {
+    if (!files.length) return;
+    const form = new FormData();
+    [...files].forEach(f => form.append("files", f));
+    await fetch("/api/upload", { method: "POST", body: form });
+    refreshPhotos();
+  }
+
+  dropZone.addEventListener("click", () => fileInput.click());
+  fileInput.addEventListener("change", () => uploadFiles(fileInput.files));
+
+  dropZone.addEventListener("dragover", e => {
+    e.preventDefault();
+    dropZone.classList.add("drag-over");
+  });
+  dropZone.addEventListener("dragleave", () => dropZone.classList.remove("drag-over"));
+  dropZone.addEventListener("drop", e => {
+    e.preventDefault();
+    dropZone.classList.remove("drag-over");
+    uploadFiles(e.dataTransfer.files);
+  });
+
+  clearBtn.addEventListener("click", async () => {
+    if (!confirm("アップロード済みの写真をすべて削除しますか？")) return;
+    await fetch("/api/photos", { method: "DELETE" });
+    refreshPhotos();
+  });
+
+  runBtn.addEventListener("click", () => {
+    runBtn.disabled   = true;
+    runBtn.classList.add("running");
+    clearBtn.disabled = true;
+    logBox.innerHTML  = "";
+    logPanel.style.display = "block";
+    logBox.style.display   = "block";
+    logBox.scrollTop = 0;
+
+    const es = new EventSource("/api/run");
+
+    es.onmessage = (e) => {
+      const msg  = JSON.parse(e.data);
+      const line = document.createElement("div");
+
+      if (msg.type === "error") {
+        line.className   = "log-error";
+        line.textContent = "!! " + msg.message;
+        es.close();
+        runBtn.disabled = false;
+        runBtn.classList.remove("running");
+        clearBtn.disabled = false;
+      } else if (msg.type === "done") {
+        line.className   = "log-done";
+        line.textContent = ">> " + msg.message;
+        es.close();
+        runBtn.disabled = false;
+        runBtn.classList.remove("running");
+        clearBtn.disabled = false;
+      } else {
+        line.className   = "log-line";
+        line.textContent = "> " + msg.message;
+      }
+
+      logBox.appendChild(line);
+      logBox.scrollTop = logBox.scrollHeight;
+    };
+
+    es.onerror = () => {
+      const line = document.createElement("div");
+      line.className   = "log-error";
+      line.textContent = "!! CONNECTION ERROR";
+      logBox.appendChild(line);
+      es.close();
+      runBtn.disabled = false;
+      runBtn.classList.remove("running");
+      clearBtn.disabled = false;
+    };
+  });
+
+  refreshPhotos();
+</script>
+</body>
+</html>

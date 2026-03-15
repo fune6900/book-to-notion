@@ -1,0 +1,8 @@
+.env
+.env.example
+photos/
+*.md
+.dockerignore
+docker-compose.yml
+__pycache__/
+*.pyc
