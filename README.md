@@ -1,18 +1,30 @@
-# book_to_notion
+# BOOK TO NOTION
 
-技術書の写真 → Gemini Vision API → Notion ページ自動生成スクリプト
+> 技術書の写真を撮るだけで、Gemini AI が解説ページを自動生成して Notion に保存するツール
 
 ```
-📸 photos/ に写真を入れる
-      ↓
-docker compose up
-      ↓
-🎉 Notion にページが自動生成される
+📸 写真をドラッグ＆ドロップ
+        ↓
+🤖 Gemini Vision API が内容を解析
+        ↓
+📒 Notion にページが自動生成される
 ```
+
+**🌐 公開URL**: https://book-to-notion.onrender.com
 
 ---
 
-## セットアップ（初回のみ）
+## 使い方（Web UI）
+
+ブラウザで公開URLを開き、以下の3ステップで使えます。
+
+1. 技術書のページを撮影した写真（JPG / PNG / HEIC）をドロップゾーンにドラッグ＆ドロップ
+2. **▶ EXECUTE → NOTION** ボタンをクリック
+3. ログにページタイトルが流れ、Notion にページが自動生成される
+
+---
+
+## ローカルで動かす（Docker）
 
 ### 1. API キーの取得
 
@@ -26,10 +38,10 @@ docker compose up
 3. 「Internal Integration Token」をコピー
 
 **Notion データベース ID**
-1. Notionでスライドを保存したいデータベースを開く
-2. URLをコピー: `https://www.notion.so/xxxx/{DATABASE_ID}?v=...`
+1. Notion でページを保存したいデータベースを開く
+2. URL をコピー: `https://www.notion.so/xxxx/{DATABASE_ID}?v=...`
 3. `DATABASE_ID` の部分（32文字）をコピー
-4. そのデータベースの右上「…」→「Connections」→ 作ったIntegrationを追加
+4. データベースの右上「…」→「Connections」→ 作った Integration を追加
 
 ### 2. .env ファイルの作成
 
@@ -45,45 +57,32 @@ NOTION_API_KEY=secret_...
 NOTION_DATABASE_ID=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 ```
 
-### 3. イメージをビルド（初回のみ）
+### 3. 起動
 
 ```bash
-docker compose build
+docker compose up
 ```
+
+ブラウザで http://localhost:5001 を開く。
 
 ---
 
-## 毎日の使い方
+## Render へのデプロイ
 
-```bash
-# 1. 今日の写真を photos/ フォルダに入れる
-cp ~/Downloads/IMG_*.jpg ./photos/
+このリポジトリは `render.yaml` を含んでいるため、ワンクリックでデプロイできます。
 
-# 2. 実行
-docker compose up
+1. [Render](https://render.com) でアカウントを作成し、このリポジトリを連携
+2. **New → Web Service** → `fune6900/book-to-notion` を選択
+3. Language: **Docker** / Branch: **main** / Plan: **Free** を確認
+4. Environment Variables に以下を追加：
+   - `GEMINI_API_KEY`
+   - `NOTION_API_KEY`
+   - `NOTION_DATABASE_ID`
+5. 「Deploy Web Service」をクリック
 
-# 3. 終わったら photos/ を空にしておく（任意）
-rm ./photos/*
-```
+デプロイ後、`https://book-to-notion.onrender.com` で公開されます。
 
-### 実行例
-
-```
-book_to_notion-1  | 📸 25 枚の画像を読み込みます...
-book_to_notion-1  |   ✓ IMG_001.jpg
-book_to_notion-1  |   ✓ IMG_002.jpg
-book_to_notion-1  |   ...
-book_to_notion-1  |
-book_to_notion-1  | 🤖 Gemini に送信中...
-book_to_notion-1  | ✅ 8 スライドを生成しました
-book_to_notion-1  |
-book_to_notion-1  | 📒 Notion にページを作成中...
-book_to_notion-1  |   📝 [1] 変数とデータ型
-book_to_notion-1  |   📝 [2] 関数の基本
-book_to_notion-1  |   ...
-book_to_notion-1  |
-book_to_notion-1  | 🎉 完了！ 8 ページを Notion に保存しました
-```
+> **スリープ対策**: 無料プランは一定時間アクセスがないとスリープします。[UptimeRobot](https://uptimerobot.com) に URL を登録して5分ごとに監視すると常時起動になります。
 
 ---
 
@@ -91,14 +90,22 @@ book_to_notion-1  | 🎉 完了！ 8 ページを Notion に保存しました
 
 ```
 book_to_notion/
-├── main.py              # メインスクリプト
+├── app.py               # Flask Web サーバー（UI・API）
+├── main.py              # Gemini → Notion 変換コア
+├── slide_image.py       # スライド画像処理
+├── static/
+│   ├── index.html       # サイバーパンク Web UI
+│   ├── favicon.ico      # ファビコン（マルチサイズ）
+│   ├── favicon-32.png
+│   ├── apple-touch-icon.png  # iOS ホーム画面アイコン
+│   └── icon-192.png     # Android / PWA アイコン
+├── render.yaml          # Render デプロイ設定
 ├── Dockerfile
 ├── docker-compose.yml
 ├── requirements.txt
-├── .env                 # APIキー（Gitに含めないこと）
+├── .env                 # APIキー（Git に含めないこと）
 ├── .env.example         # テンプレート
-├── .dockerignore
-└── photos/              # ここに今日の写真を入れる（空でOK）
+└── photos/              # アップロード写真の一時保存先
 ```
 
 ---
@@ -122,10 +129,13 @@ book_to_notion/
 → `.env` ファイルが `docker-compose.yml` と同じフォルダにあるか確認
 
 **`APIResponseError` (Notion)**
-→ データベースにIntegrationが追加されているか確認（セットアップ手順1の最後）
+→ データベースに Integration が追加されているか確認（セットアップ手順1の最後）
 
 **`photos/` に画像がないと言われる**
 → `photos/` フォルダ自体が存在するか確認: `mkdir -p photos`
 
-**JSONパース失敗**
-→ Geminiのレスポンスが不安定な場合があります。`docker compose up` を再実行
+**JSON パース失敗**
+→ Gemini のレスポンスが不安定な場合があります。再実行してください
+
+**Render デプロイ後に 503 エラー**
+→ 無料プランのスリープ中です。初回アクセスから約30秒待つと起動します
