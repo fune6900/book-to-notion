@@ -304,6 +304,59 @@
     }
     #file-input { display: none; }
 
+    /* ── アップロードプログレス ───────────────────────── */
+    #upload-progress {
+      display: none;
+      padding: 32px 24px;
+      text-align: center;
+    }
+    .progress-label {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.78rem;
+      color: var(--cyan);
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      margin-bottom: 14px;
+    }
+    .progress-label .pct {
+      color: var(--pink);
+      text-shadow: var(--glow-pink);
+      font-size: 1.1rem;
+      margin-left: 10px;
+    }
+    .progress-track {
+      width: 100%;
+      height: 6px;
+      background: rgba(0,212,255,0.08);
+      border-radius: 3px;
+      overflow: hidden;
+      position: relative;
+      border: 1px solid rgba(0,212,255,0.15);
+    }
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--cyan-dim), var(--cyan), var(--pink));
+      border-radius: 3px;
+      transition: width 0.15s ease-out;
+      box-shadow: 0 0 10px rgba(0,212,255,0.8);
+      position: relative;
+    }
+    .progress-fill::after {
+      content: '';
+      position: absolute;
+      right: 0; top: 0; bottom: 0;
+      width: 20px;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4));
+    }
+    .progress-files {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.65rem;
+      color: var(--muted);
+      letter-spacing: 0.12em;
+      margin-top: 10px;
+    }
+
     /* ── グリッドヘッダー ────────────────────────────── */
     .grid-header {
       display: flex;
@@ -509,6 +562,147 @@
       font-weight: bold;
       letter-spacing: 0.05em;
       animation: log-slide-in 0.25s cubic-bezier(0.16, 1, 0.3, 1) both, done-flash 0.5s ease-out 0.25s both;
+    }
+
+    /* ── モーダルオーバーレイ ────────────────────────── */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(2,2,15,0.88);
+      backdrop-filter: blur(5px);
+      z-index: 300;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      animation: modal-fade-in 0.2s ease-out both;
+    }
+    .modal-overlay.hidden { display: none; }
+
+    @keyframes modal-fade-in {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+    }
+
+    .modal {
+      background: rgba(7,7,28,0.98);
+      border: 1px solid rgba(0,212,255,0.3);
+      border-radius: 4px;
+      max-width: 520px;
+      width: 100%;
+      position: relative;
+      box-shadow:
+        0 0 50px rgba(0,212,255,0.10),
+        0 0 100px rgba(155,77,255,0.07),
+        inset 0 0 40px rgba(0,212,255,0.03);
+      animation: modal-slide-up 0.3s cubic-bezier(0.16,1,0.3,1) both;
+    }
+
+    @keyframes modal-slide-up {
+      from { opacity: 0; transform: translateY(24px) scale(0.97); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .modal-header {
+      padding: 18px 22px 14px;
+      border-bottom: 1px solid rgba(0,212,255,0.1);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .modal-title {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.82rem;
+      letter-spacing: 0.22em;
+      color: var(--cyan);
+      text-shadow: var(--glow-cyan);
+      text-transform: uppercase;
+    }
+    .modal-title::before { content: "// "; opacity: 0.5; }
+
+    .modal-close {
+      background: transparent;
+      border: 1px solid rgba(0,212,255,0.2);
+      color: var(--muted);
+      font-size: 0.68rem;
+      padding: 4px 10px;
+      letter-spacing: 0.1em;
+      border-radius: 2px;
+      font-family: 'Share Tech Mono', monospace;
+      transition: all 0.15s;
+    }
+    .modal-close:hover {
+      border-color: var(--pink);
+      color: var(--pink);
+      box-shadow: 0 0 8px rgba(255,45,120,0.25);
+    }
+
+    .modal-body {
+      padding: 18px 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .modal-item {
+      display: flex;
+      gap: 13px;
+      align-items: flex-start;
+      padding: 10px 13px;
+      background: rgba(0,212,255,0.025);
+      border: 1px solid rgba(0,212,255,0.07);
+      border-radius: 3px;
+      transition: border-color 0.2s;
+    }
+    .modal-item:hover { border-color: rgba(0,212,255,0.18); }
+    .modal-item-icon { font-size: 1rem; flex-shrink: 0; margin-top: 2px; }
+    .modal-item-text { font-size: 0.77rem; line-height: 1.65; color: var(--text); }
+    .modal-item-text strong {
+      font-family: 'Share Tech Mono', monospace;
+      color: var(--cyan);
+      font-weight: normal;
+      font-size: 0.68rem;
+      letter-spacing: 0.1em;
+      display: block;
+      margin-bottom: 3px;
+      opacity: 0.8;
+    }
+    .modal-item-text .warn { color: var(--pink); font-weight: bold; }
+
+    .modal-footer {
+      padding: 4px 22px 20px;
+      text-align: center;
+    }
+    .modal-ok-btn {
+      background: var(--cyan);
+      color: var(--bg);
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.78rem;
+      letter-spacing: 0.15em;
+      padding: 10px 36px;
+      border-radius: 3px;
+      box-shadow: var(--glow-cyan);
+      transition: all 0.15s;
+    }
+    .modal-ok-btn:hover {
+      background: var(--cyan-dim);
+      transform: translateY(-1px);
+      box-shadow: 0 0 20px rgba(0,212,255,0.9), 0 0 50px rgba(0,212,255,0.4);
+    }
+
+    #help-btn {
+      background: transparent;
+      border: 1px solid rgba(0,212,255,0.25);
+      color: var(--muted);
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.78rem;
+      letter-spacing: 0.1em;
+      padding: 13px 16px;
+      transition: all 0.15s;
+    }
+    #help-btn:hover {
+      border-color: var(--cyan);
+      color: var(--cyan);
+      box-shadow: 0 0 8px rgba(0,212,255,0.2);
     }
 
     /* ── フッター ────────────────────────────────────── */
@@ -766,6 +960,14 @@
         <p class="drop-sub">クリックして選択 &nbsp;|&nbsp; JPG / PNG / HEIC</p>
         <input type="file" id="file-input" multiple accept=".jpg,.jpeg,.png,.webp,.heic" />
       </div>
+      <!-- アップロード進捗 -->
+      <div id="upload-progress">
+        <p class="progress-label">UPLOADING<span class="pct" id="upload-pct">0%</span></p>
+        <div class="progress-track">
+          <div class="progress-fill" id="progress-fill"></div>
+        </div>
+        <p class="progress-files" id="upload-files-label"></p>
+      </div>
     </div>
 
     <!-- サムネイルヘッダー -->
@@ -779,6 +981,7 @@
 
     <!-- アクションバー -->
     <div class="action-bar">
+      <button id="help-btn">[ ? ]</button>
       <button id="clear-btn" disabled>[ CLEAR ]</button>
       <button id="run-btn" disabled>▶ EXECUTE → NOTION</button>
     </div>
@@ -793,6 +996,60 @@
       <div id="log-box"></div>
     </div>
 
+  </div>
+
+  <!-- 使用上の注意モーダル -->
+  <div class="modal-overlay hidden" id="help-modal">
+    <div class="modal">
+      <div class="panel-corner tl"></div>
+      <div class="panel-corner tr"></div>
+      <div class="panel-corner bl"></div>
+      <div class="panel-corner br"></div>
+      <div class="modal-header">
+        <span class="modal-title">USAGE NOTES</span>
+        <button class="modal-close" id="modal-close-x">[ ✕ CLOSE ]</button>
+      </div>
+      <div class="modal-body">
+        <div class="modal-item">
+          <span class="modal-item-icon">📷</span>
+          <div class="modal-item-text">
+            <strong>MAX UPLOAD</strong>
+            一度に送信できる画像は <span class="warn">最大10枚</span> まで。枚数が多い場合は複数回に分けて EXECUTE してください。
+          </div>
+        </div>
+        <div class="modal-item">
+          <span class="modal-item-icon">🔍</span>
+          <div class="modal-item-text">
+            <strong>IMAGE QUALITY</strong>
+            テキストがはっきり写るよう、明るい場所でブレずに撮影してください。ピンボケや暗い画像は解析精度が低下します。
+          </div>
+        </div>
+        <div class="modal-item">
+          <span class="modal-item-icon">⏱</span>
+          <div class="modal-item-text">
+            <strong>PROCESSING TIME</strong>
+            Gemini AI の解析には数十秒〜数分かかります。EXECUTE 後はログを確認しながらお待ちください。ページを離れないでください。
+          </div>
+        </div>
+        <div class="modal-item">
+          <span class="modal-item-icon">🗂</span>
+          <div class="modal-item-text">
+            <strong>FILE FORMATS</strong>
+            対応フォーマット：JPG / PNG / WEBP / HEIC。それ以外のファイルは自動的に無視されます。
+          </div>
+        </div>
+        <div class="modal-item">
+          <span class="modal-item-icon">🗑</span>
+          <div class="modal-item-text">
+            <strong>CLEANUP</strong>
+            アップロードした画像は処理後もサーバーに残ります。完了後は <span class="warn">[ CLEAR ]</span> ボタンで削除してください。
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="modal-ok-btn" id="modal-ok-btn">[ UNDERSTOOD ]</button>
+      </div>
+    </div>
   </div>
 
   <footer>BOOK_TO_NOTION &nbsp;·&nbsp; DOCKER &nbsp;·&nbsp; v2.0</footer>
@@ -894,7 +1151,6 @@
   const clearBtn   = document.getElementById("clear-btn");
   const logBox     = document.getElementById("log-box");
   const logPanel   = document.getElementById("log-panel");
-
   async function refreshPhotos() {
     const res  = await fetch("/api/photos");
     const data = await res.json();
@@ -950,12 +1206,109 @@
     });
   }
 
+  /* ─── 画像圧縮（Canvas リサイズ） ──────────────────
+     長辺 MAX_PX px・JPEG quality で圧縮。
+     HEIC など Canvas で読めない場合はそのまま通す。   */
+  const MAX_PX   = 1600;
+  const QUALITY  = 0.85;
+
+  function compressImage(file) {
+    return new Promise(resolve => {
+      // HEIC や未対応形式はそのまま
+      if (!file.type.startsWith("image/") || file.type === "image/heic") {
+        resolve(file);
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = ev => {
+        const img = new Image();
+        img.onload = () => {
+          let w = img.naturalWidth, h = img.naturalHeight;
+          if (w > MAX_PX || h > MAX_PX) {
+            if (w >= h) { h = Math.round(h * MAX_PX / w); w = MAX_PX; }
+            else        { w = Math.round(w * MAX_PX / h); h = MAX_PX; }
+          }
+          const canvas = document.createElement("canvas");
+          canvas.width = w; canvas.height = h;
+          canvas.getContext("2d").drawImage(img, 0, 0, w, h);
+          canvas.toBlob(blob => {
+            const name = file.name.replace(/\.[^.]+$/, ".jpg");
+            resolve(new File([blob], name, { type: "image/jpeg" }));
+          }, "image/jpeg", QUALITY);
+        };
+        img.onerror = () => resolve(file); // 展開失敗時はそのまま
+        img.src = ev.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
   async function uploadFiles(files) {
     if (!files.length) return;
+
+    const fileList = [...files];
+    const names = fileList.map(f => f.name).join(", ");
+    const shortNames = names.length > 40 ? names.slice(0, 40) + "…" : names;
+
+    // プログレス UI を表示
+    dropZone.style.display   = "none";
+    const progressEl = document.getElementById("upload-progress");
+    const fillEl     = document.getElementById("progress-fill");
+    const pctEl      = document.getElementById("upload-pct");
+    const filesLabel = document.getElementById("upload-files-label");
+    const labelEl    = progressEl.querySelector(".progress-label");
+    progressEl.style.display = "block";
+    fillEl.style.width       = "0%";
+    pctEl.textContent        = "";
+    filesLabel.textContent   = `${fileList.length} FILE${fileList.length > 1 ? "S" : ""} · ${shortNames}`;
+
+    // ── 圧縮フェーズ ──────────────────────────────
+    labelEl.childNodes[0].textContent = "COMPRESSING";
+    const compressed = await Promise.all(fileList.map((f, i) =>
+      compressImage(f).then(c => {
+        const pct = Math.round((i + 1) / fileList.length * 40); // 0〜40%
+        fillEl.style.width = pct + "%";
+        pctEl.textContent  = pct + "%";
+        return c;
+      })
+    ));
+
+    // ── アップロードフェーズ ──────────────────────
+    labelEl.childNodes[0].textContent = "UPLOADING";
+    fillEl.style.width = "40%";
+    pctEl.textContent  = "40%";
+
     const form = new FormData();
-    [...files].forEach(f => form.append("files", f));
-    await fetch("/api/upload", { method: "POST", body: form });
-    refreshPhotos();
+    compressed.forEach(f => form.append("files", f));
+
+    const xhr = new XMLHttpRequest();
+
+    xhr.upload.addEventListener("progress", e => {
+      if (!e.lengthComputable) return;
+      // 40〜100% をアップロード進捗に割り当て
+      const pct = Math.round(40 + (e.loaded / e.total) * 60);
+      fillEl.style.width = pct + "%";
+      pctEl.textContent  = pct + "%";
+    });
+
+    xhr.addEventListener("load", () => {
+      fillEl.style.width = "100%";
+      pctEl.textContent  = "100%";
+      labelEl.childNodes[0].textContent = "UPLOADING";
+      setTimeout(() => {
+        progressEl.style.display = "none";
+        dropZone.style.display   = "block";
+        refreshPhotos();
+      }, 500);
+    });
+
+    xhr.addEventListener("error", () => {
+      progressEl.style.display = "none";
+      dropZone.style.display   = "block";
+    });
+
+    xhr.open("POST", "/api/upload");
+    xhr.send(form);
   }
 
   dropZone.addEventListener("click", () => fileInput.click());
@@ -1029,6 +1382,28 @@
   });
 
   refreshPhotos();
+
+  /* ─── 使用上の注意モーダル ──────────────────────── */
+  const helpModal   = document.getElementById("help-modal");
+  const helpBtn     = document.getElementById("help-btn");
+  const modalCloseX = document.getElementById("modal-close-x");
+  const modalOkBtn  = document.getElementById("modal-ok-btn");
+
+  function openModal()  { helpModal.classList.remove("hidden"); }
+  function closeModal() { helpModal.classList.add("hidden"); }
+
+  helpBtn.addEventListener("click", openModal);
+  modalCloseX.addEventListener("click", closeModal);
+  modalOkBtn.addEventListener("click", () => {
+    localStorage.setItem("b2n_usage_seen", "1");
+    closeModal();
+  });
+  helpModal.addEventListener("click", e => {
+    if (e.target === helpModal) closeModal();
+  });
+
+  // 初回アクセス時は自動で表示
+  if (!localStorage.getItem("b2n_usage_seen")) openModal();
 </script>
 </body>
 </html>

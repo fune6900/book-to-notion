@@ -294,12 +294,7 @@ def run(folder: Path):
         title = create_notion_page(notion, slide, i)
         yield {"type": "log", "message": f"  📝 [{i + 1}/{len(slides)}] {title}"}
 
-    # NotebookLM プロンプトページを作成
-    yield {"type": "log", "message": "\n📋 NotebookLM プロンプトページを作成中..."}
-    prompt_title = create_prompt_page(notion, slides)
-    yield {"type": "log", "message": f"  ✅ {prompt_title}"}
-
-    yield {"type": "done", "message": f"🎉 完了！ 解説 {len(slides)} ページ ＋ プロンプトページ を Notion に保存しました"}
+    yield {"type": "done", "message": f"🎉 完了！ {len(slides)} ページを Notion に保存しました"}
 
 # ── CLI エントリポイント ───────────────────────────────
 if __name__ == "__main__":
