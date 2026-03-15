@@ -1151,6 +1151,8 @@
   const clearBtn   = document.getElementById("clear-btn");
   const logBox     = document.getElementById("log-box");
   const logPanel   = document.getElementById("log-panel");
+  const MAX_IMAGES = 10;
+  let currentPhotoCount = 0;
   async function refreshPhotos() {
     const res  = await fetch("/api/photos");
     const data = await res.json();
@@ -1159,6 +1161,7 @@
 
   function renderThumbs(files) {
     thumbGrid.innerHTML = "";
+    currentPhotoCount = files.length;
     const has = files.length > 0;
     emptyState.style.display = has ? "none" : "block";
     runBtn.disabled   = !has;
@@ -1246,7 +1249,17 @@
   async function uploadFiles(files) {
     if (!files.length) return;
 
-    const fileList = [...files];
+    const available = MAX_IMAGES - currentPhotoCount;
+    if (available <= 0) {
+      alert(`アップロード済みの画像が上限（${MAX_IMAGES}枚）に達しています。\n追加するにはいくつか削除してください。`);
+      return;
+    }
+
+    const allFiles = [...files];
+    const fileList = allFiles.slice(0, available);
+    if (allFiles.length > available) {
+      alert(`一度にアップロードできる画像は合計${MAX_IMAGES}枚までです。\n${fileList.length}枚のみアップロードします。`);
+    }
     const names = fileList.map(f => f.name).join(", ");
     const shortNames = names.length > 40 ? names.slice(0, 40) + "…" : names;
 
@@ -1332,6 +1345,10 @@
   });
 
   runBtn.addEventListener("click", () => {
+    if (currentPhotoCount > MAX_IMAGES) {
+      alert(`送信できる画像は1度に${MAX_IMAGES}枚までです。\n現在${currentPhotoCount}枚アップロードされています。不要な画像を削除してください。`);
+      return;
+    }
     runBtn.disabled   = true;
     runBtn.classList.add("running");
     clearBtn.disabled = true;
