@@ -3,7 +3,30 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>BOOK TO NOTION</title>
+  <meta name="description" content="技術書の写真をアップロードするだけで、Gemini AI が解説ページを自動生成して Notion に保存。毎日の技術書学習を効率化するサイバーパンクなWeb UIツール。" />
+  <meta name="theme-color" content="#04041a" />
+
+  <!-- OGP -->
+  <meta property="og:title" content="BOOK TO NOTION" />
+  <meta property="og:description" content="技術書の写真 → Gemini AI 解説 → Notion 自動保存" />
+  <meta property="og:type" content="website" />
+
+  <!-- iOS -->
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="B→N" />
+
+  <title>BOOK TO NOTION ── AI 技術書ノート自動化</title>
+
+  <!-- ファビコン（Gemini AI 生成アイコン） -->
+  <link rel="icon" type="image/x-icon"  href="/static/favicon.ico" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/static/favicon-32.png" />
+  <link rel="icon" type="image/png" sizes="16x16" href="/static/favicon-16.png" />
+  <!-- iOS ホーム画面アイコン -->
+  <link rel="apple-touch-icon" sizes="180x180" href="/static/apple-touch-icon.png" />
+  <!-- Android / PWA -->
+  <link rel="icon" type="image/png" sizes="192x192" href="/static/icon-192.png" />
+  <link rel="icon" type="image/png" sizes="512x512" href="/static/icon-512.png" />
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Noto+Sans+JP:wght@400;700;900&display=swap');
 
@@ -647,6 +670,71 @@
       97%  { opacity: 0.8; transform: translate(-2px, 0); letter-spacing: 0.25em; color: var(--cyan); }
       98%  { opacity: 0.3; transform: translate(2px, 0);  letter-spacing: 0.18em; color: var(--pink); }
       99%  { opacity: 0.7; transform: translate(0, 1px);  letter-spacing: 0.22em; color: var(--text); }
+    }
+
+    /* ══════════════════════════════════════════════════
+       RESPONSIVE — タブレット（〜768px）
+    ══════════════════════════════════════════════════ */
+    @media (max-width: 768px) {
+      body { padding: 28px 14px 50px; }
+
+      .logo { font-size: 2rem; }
+      .logo .word-to { font-size: 1rem; margin: 0 6px; }
+      .subtitle { font-size: 0.72rem; letter-spacing: 0.12em; }
+      header { margin-bottom: 28px; }
+      .container { gap: 18px; }
+
+      #drop-zone { padding: 36px 16px; }
+      .drop-icon { font-size: 2.2rem; }
+      #drop-zone .drop-title { font-size: 0.9rem; }
+      #drop-zone .drop-sub { font-size: 0.72rem; }
+
+      #thumb-grid { grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 6px; }
+
+      button { padding: 12px 16px; font-size: 0.8rem; }
+
+      #log-box { font-size: 0.73rem; padding: 14px; max-height: 260px; }
+    }
+
+    /* ══════════════════════════════════════════════════
+       RESPONSIVE — スマホ（〜480px）
+    ══════════════════════════════════════════════════ */
+    @media (max-width: 480px) {
+      body { padding: 20px 10px 44px; }
+
+      .logo { font-size: 1.65rem; letter-spacing: 0.08em; }
+      .logo .word-to { font-size: 0.9rem; margin: 0 5px; }
+      .subtitle { font-size: 0.65rem; letter-spacing: 0.08em; margin-top: 7px; }
+      header { margin-bottom: 20px; }
+      .container { gap: 14px; }
+
+      #drop-zone { padding: 28px 12px; }
+      .drop-icon { font-size: 2rem; margin-bottom: 10px; }
+      #drop-zone .drop-title { font-size: 0.82rem; letter-spacing: 0.06em; }
+      #drop-zone .drop-sub { font-size: 0.66rem; }
+
+      .grid-header { flex-wrap: wrap; gap: 6px; }
+      .section-label { font-size: 0.65rem; letter-spacing: 0.15em; }
+      .count-badge { font-size: 0.65rem; padding: 2px 8px; }
+
+      #thumb-grid { grid-template-columns: repeat(auto-fill, minmax(76px, 1fr)); gap: 5px; }
+
+      /* アクションバーを縦積みに */
+      .action-bar { flex-direction: column; gap: 8px; }
+      #run-btn { order: 1; padding: 16px 18px; font-size: 0.85rem; }
+      #clear-btn { order: 2; }
+
+      #log-box { font-size: 0.69rem; padding: 12px; max-height: 220px; line-height: 1.75; }
+
+      .panel-label { font-size: 0.58rem; letter-spacing: 0.15em; }
+      footer { font-size: 0.58rem; letter-spacing: 0.12em; }
+    }
+
+    /* ── タッチデバイス：ホバー系を調整 ─────────── */
+    @media (hover: none) {
+      .thumb-item:hover { transform: none; }
+      .thumb-item .del-btn { opacity: 0.75; } /* 常時表示 */
+      #run-btn:hover:not(:disabled)::after { transform: translateX(-100%); }
     }
   </style>
 </head>

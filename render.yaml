@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: book-to-notion
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: GEMINI_API_KEY
+        sync: false          # Renderダッシュボードで手動設定
+      - key: NOTION_API_KEY
+        sync: false
+      - key: NOTION_DATABASE_ID
+        sync: false
+      - key: PORT
+        value: 10000         # Renderが使うデフォルトポート
+    disk:
+      name: photos-storage
+      mountPath: /photos
+      sizeGB: 1
