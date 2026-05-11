@@ -3,6 +3,7 @@ services:
     name: book-to-notion
     runtime: docker
     plan: free
+    region: oregon          # Gemini API が Singapore IP を弾くため US 西海岸を明示
     dockerfilePath: ./Dockerfile
     envVars:
       - key: GEMINI_API_KEY
