@@ -110,6 +110,41 @@ def run_pipeline():
 def thumbnail(filename):
     return send_from_directory(str(UPLOAD_DIR), secure_filename(filename))
 
+# ── 一時デバッグ：Render egress IP と Gemini 到達確認 ────────────
+# Gemini の地域制限調査用。確認後すぐに削除すること。
+# API キーはレスポンスに含めない（URL クエリで送るのみ）。
+@app.route("/api/debug/egress")
+def debug_egress():
+    import urllib.request
+    import urllib.error
+
+    out: dict = {}
+
+    try:
+        with urllib.request.urlopen("https://ipinfo.io/json", timeout=5) as r:
+            out["ip_info"] = json.loads(r.read())
+    except Exception as e:
+        out["ip_info"] = {"error": str(e)}
+
+    api_key = os.getenv("GEMINI_API_KEY", "")
+    if not api_key:
+        out["gemini_check"] = "skipped: no GEMINI_API_KEY"
+    else:
+        try:
+            url = f"https://generativelanguage.googleapis.com/v1beta/models?key={api_key}"
+            with urllib.request.urlopen(url, timeout=10) as r:
+                out["gemini_check"] = {"status": r.status, "ok": True}
+        except urllib.error.HTTPError as e:
+            try:
+                body = e.read().decode()[:400]
+            except Exception:
+                body = ""
+            out["gemini_check"] = {"status": e.code, "ok": False, "body": body}
+        except Exception as e:
+            out["gemini_check"] = {"error": str(e)}
+
+    return jsonify(out)
+
 if __name__ == "__main__":
     port = int(os.getenv("PORT", 5001))
     app.run(host="0.0.0.0", port=port, debug=False)
