@@ -25,3 +25,7 @@ Thumbs.db
 .idea/
 .vscode/
 *.swp
+
+# Claude Code（ローカル設定・ランタイム状態）
+.claude/settings.local.json
+.claude/scheduled_tasks.lock
