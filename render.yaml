@@ -14,7 +14,6 @@ services:
         sync: false
       - key: PORT
         value: 10000         # Renderが使うデフォルトポート
-    disk:
-      name: photos-storage
-      mountPath: /photos
-      sizeGB: 1
+    # 無料プランは Persistent Disk 非対応のため /photos はコンテナ一時 FS。
+    # 再起動・スリープ復帰で中身は消える。アップロード→EXECUTE→CLEAR の運用前提のため許容。
+    # 永続化が必要なら Starter プラン以上に上げて disk: ブロックを復活させる。
